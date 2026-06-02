@@ -5,6 +5,11 @@ pydantic-settings==2.1.0
 python-dotenv==1.0.0
 python-multipart==0.0.6
 
+# Database
+sqlalchemy[asyncio]
+asyncpg
+pgvector
+
 # LangChain Core
 langchain
 langchain-core
@@ -12,9 +17,6 @@ langchain-core
 # OpenAI Integration
 langchain-openai
 openai
-
-# Environment Variable Management
-python-dotenv
 
 # Machine Learning Utilities
 numpy

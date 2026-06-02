@@ -4,10 +4,9 @@
 
 import re
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
 from app.schemas.caterer import ChatRequest, ChatResponse, MatchedCaterer
-from app.models.matcher import get_recommendations, get_db_recommendations
+from app.models.matcher import get_db_recommendations
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -181,23 +180,20 @@ def _build_reply(info: dict, missing: list, is_first: bool) -> str:
 
 
 @router.post("", response_model=ChatResponse)
-def chat(payload: ChatRequest):
-    """
-    Rule-based chat endpoint — no AI API key required.
-    Extracts event info from conversation history and returns ranked caterers.
-    """
+async def chat(payload: ChatRequest, db=Depends(get_db)):
     messages = [m.model_dump() for m in payload.messages]
     is_first  = all(m["role"] != "user" for m in messages)
 
-    # Accumulate info from full conversation history
     info    = _merge_info(messages)
     missing = _missing_fields(info)
     reply   = _build_reply(info, missing, is_first)
 
-    # Return recommendations only when we have enough info
     recommendations = None
     if not missing and info:
-        matched = get_recommendations(info, top_n=4)
+        query_text = " ".join(
+            m["content"] for m in messages if m["role"] == "user"
+        )
+        matched = await get_db_recommendations(query_text, info, db, top_n=4)
         recommendations = [MatchedCaterer(**c) for c in matched]
 
     return ChatResponse(
