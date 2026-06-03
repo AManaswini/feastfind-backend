@@ -28,7 +28,10 @@ async def _embed(client: AsyncOpenAI, blob: str) -> list[float]:
 async def create_tables():
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
-        await Base.metadata.create_all(conn)
+        # Drop old separate admin tables (replaced by unified users/user_sessions)
+        await conn.execute(text("DROP TABLE IF EXISTS admin_sessions CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS admins CASCADE"))
+        await conn.run_sync(Base.metadata.create_all)
 
 
 async def seed_caterers():

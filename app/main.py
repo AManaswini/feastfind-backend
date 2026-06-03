@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.routers import caterers, inquiries, chat, events, openai_chat
+from app.routers import caterers, inquiries, chat, events, openai_chat, auth
 from app.db.init_db import init_db
 
 
@@ -37,6 +37,7 @@ app.include_router(inquiries.router, prefix="/api")
 app.include_router(chat.router,      prefix="/api")
 app.include_router(openai_chat.router, prefix="/api")
 app.include_router(events.router,    prefix="/api")
+app.include_router(auth.router,      prefix="/api")
 
 
 # ── Health ──────────────────────────────────────────────────────

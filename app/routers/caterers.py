@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
 from app.db.database import get_db
-from app.db.models import Caterer as CatererModel
-from app.schemas.caterer import CatererSummary, CatererDetail
+from app.db.models import Caterer as CatererModel, User
+from app.schemas.caterer import CatererSummary, CatererDetail, CatererCreate
+from app.core.auth import require_admin
 
 router = APIRouter(prefix="/caterers", tags=["Caterers"])
 
@@ -46,4 +47,17 @@ async def get_caterer(caterer_id: int, db: AsyncSession = Depends(get_db)):
     caterer = await db.get(CatererModel, caterer_id)
     if not caterer:
         raise HTTPException(status_code=404, detail="Caterer not found")
+    return caterer
+
+
+@router.post("", response_model=CatererDetail, status_code=201)
+async def create_caterer(
+    payload: CatererCreate,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    caterer = CatererModel(**payload.model_dump())
+    db.add(caterer)
+    await db.commit()
+    await db.refresh(caterer)
     return caterer
